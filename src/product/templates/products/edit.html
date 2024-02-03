@@ -1,0 +1,22 @@
+{% extends 'backend/base.html' %}
+
+{% block title %}
+  Edit Product
+{% endblock %}
+
+{% block content %}
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Edit Product</h1>
+    <a href="{% url 'product:create.product' %}" class="float-right btn btn-primary">All Product</a>
+  </div>
+
+  <script>
+    var varients = {{ variants|safe }}
+    var product = {{ product|safe }}
+    console.log(product)
+  </script>
+
+  <div id="root" data-edit-mode="{{ edit_mode|lower }}">
+    <EditProduct id="product" data-variants="{{ variants|safe }}" data-product="{{ product|safe }}"></EditProduct>
+  </div>
+{% endblock %}

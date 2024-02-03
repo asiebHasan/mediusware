@@ -17,12 +17,12 @@ class Product(TimeStampMixin):
 
 class ProductImage(TimeStampMixin):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    file_path = models.URLField()
+    file_path = models.ImageField(upload_to='product_images/')
 
 
 class ProductVariant(TimeStampMixin):
     variant_title = models.CharField(max_length=255)
-    variant = models.ForeignKey(Variant, on_delete=models.CASCADE)
+    variant = models.ForeignKey(Variant, on_delete=models.CASCADE, related_name ='variant')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
 
@@ -35,4 +35,4 @@ class ProductVariantPrice(TimeStampMixin):
                                               related_name='product_variant_three')
     price = models.FloatField()
     stock = models.FloatField()
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name ='product_variants')

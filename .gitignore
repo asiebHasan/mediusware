@@ -5,6 +5,7 @@ static
 media
 *.pyc
 env
+.env
 venv
 virtualenv
 .code

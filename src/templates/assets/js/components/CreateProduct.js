@@ -1,20 +1,22 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
 import Dropzone from 'react-dropzone'
+import { contains } from 'jquery';
 
 
 const CreateProduct = (props) => {
-
+    const [title, setTitle] = useState('')
+    const [sku, setSku] = useState('')
+    const [   , setDescription] = useState('')
+    const [files, setFiles] = useState([]);
     const [productVariantPrices, setProductVariantPrices] = useState([])
-
     const [productVariants, setProductVariant] = useState([
         {
             option: 1,
             tags: []
         }
     ])
-    console.log(typeof props.variants)
     // handle click event of the Add button
     const handleAddClick = () => {
         let all_variants = JSON.parse(props.variants.replaceAll("'", '"')).map(el => el.id)
@@ -26,12 +28,12 @@ const CreateProduct = (props) => {
         }])
     };
 
+
     // handle input change on tag input
     const handleInputTagOnChange = (value, index) => {
         let product_variants = [...productVariants]
         product_variants[index].tags = value
         setProductVariant(product_variants)
-
         checkVariant()
     }
 
@@ -77,28 +79,68 @@ const CreateProduct = (props) => {
     // Save product
     let saveProduct = (event) => {
         event.preventDefault();
-        // TODO : write your code here to save the product
+
+        let formData = new FormData();
+
+        formData.append('product', JSON.stringify({
+            title: title,
+            sku: sku,
+            description: description
+        }));
+
+        formData.append('productVariantPrice', JSON.stringify(productVariantPrices));
+
+        for (let i = 0; i < files.length; i++) {
+            formData.append(`file_${i}`, files[i]);
+        }
+
+        console.log(formData.get(files));
+
+        fetch('', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                document.getElementById('alert-box').classList.add('alert-success')
+                document.getElementById('alert-box').innerText = data.message
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('alert-box').classList.add('alert-danger')
+                document.getElementById('alert-box').innerText = "Invalid Product Data"
+            });
     }
+
 
 
     return (
         <div>
             <section>
+                <div className='alert' id='alert-box'>
+                </div>
                 <div className="row">
                     <div className="col-md-6">
                         <div className="card shadow mb-4">
                             <div className="card-body">
+
                                 <div className="form-group">
                                     <label htmlFor="">Product Name</label>
-                                    <input type="text" placeholder="Product Name" className="form-control"/>
+                                    <input type="text" name='title' onChange={(e) => setTitle(e.target.value)} placeholder="Product Name" className="form-control" />
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="">Product SKU</label>
-                                    <input type="text" placeholder="Product Name" className="form-control"/>
+                                    <input type="text" id='product_sku' name='product_sku' onChange={(e) => setSku(e.target.value)} placeholder="Product Name" className="form-control" />
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="">Description</label>
-                                    <textarea id="" cols="30" rows="4" className="form-control"></textarea>
+                                    <textarea id="product_description" name='product_description' onChange={(e) => setDescription(e.target.value)} cols="30" rows="4" className="form-control"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -109,8 +151,8 @@ const CreateProduct = (props) => {
                                 <h6 className="m-0 font-weight-bold text-primary">Media</h6>
                             </div>
                             <div className="card-body border">
-                                <Dropzone onDrop={acceptedFiles => console.log(acceptedFiles)}>
-                                    {({getRootProps, getInputProps}) => (
+                                <Dropzone onDrop={acceptedFiles => setFiles(acceptedFiles)}>
+                                    {({ getRootProps, getInputProps }) => (
                                         <section>
                                             <div {...getRootProps()}>
                                                 <input {...getInputProps()} />
@@ -138,11 +180,11 @@ const CreateProduct = (props) => {
                                                 <div className="col-md-4">
                                                     <div className="form-group">
                                                         <label htmlFor="">Option</label>
-                                                        <select className="form-control" defaultValue={element.option}>
+                                                        <select className="form-control" defaultValue={element.option} id='' disabled>
                                                             {
                                                                 JSON.parse(props.variants.replaceAll("'", '"')).map((variant, index) => {
                                                                     return (<option key={index}
-                                                                                    value={variant.id}>{variant.title}</option>)
+                                                                        value={variant.id}>{variant.title}</option>)
                                                                 })
                                                             }
 
@@ -155,15 +197,15 @@ const CreateProduct = (props) => {
                                                         {
                                                             productVariants.length > 1
                                                                 ? <label htmlFor="" className="float-right text-primary"
-                                                                         style={{marginTop: "-30px"}}
-                                                                         onClick={() => removeProductVariant(index)}>remove</label>
+                                                                    style={{ marginTop: "-30px" }}
+                                                                    onClick={() => removeProductVariant(index)}>remove</label>
                                                                 : ''
                                                         }
 
-                                                        <section style={{marginTop: "30px"}}>
+                                                        <section style={{ marginTop: "30px" }}>
                                                             <TagsInput value={element.tags}
-                                                                       style="margin-top:30px"
-                                                                       onChange={(value) => handleInputTagOnChange(value, index)}/>
+                                                                style="margin-top:30px"
+                                                                onChange={(value) => handleInputTagOnChange(value, index)} />
                                                         </section>
 
                                                     </div>
@@ -189,24 +231,24 @@ const CreateProduct = (props) => {
                                 <div className="table-responsive">
                                     <table className="table">
                                         <thead>
-                                        <tr>
-                                            <td>Variant</td>
-                                            <td>Price</td>
-                                            <td>Stock</td>
-                                        </tr>
+                                            <tr>
+                                                <td>Variant</td>
+                                                <td>Price</td>
+                                                <td>Stock</td>
+                                            </tr>
                                         </thead>
                                         <tbody>
-                                        {
-                                            productVariantPrices.map((productVariantPrice, index) => {
-                                                return (
-                                                    <tr key={index}>
-                                                        <td>{productVariantPrice.title}</td>
-                                                        <td><input className="form-control" type="text"/></td>
-                                                        <td><input className="form-control" type="text"/></td>
-                                                    </tr>
-                                                )
-                                            })
-                                        }
+                                            {
+                                                productVariantPrices.map((productVariantPrice, index) => {
+                                                    return (
+                                                        <tr key={index}>
+                                                            <td>{productVariantPrice.title}</td>
+                                                            <td><input className="form-control" onChange={(e) => productVariantPrice['price'] = e.target.value} type="text" /></td>
+                                                            <td><input className="form-control" onChange={(e) => productVariantPrice['stock'] = e.target.value} type="text" /></td>
+                                                        </tr>
+                                                    )
+                                                })
+                                            }
                                         </tbody>
                                     </table>
                                 </div>
